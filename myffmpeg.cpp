@@ -9,17 +9,17 @@ MyFFmpeg::MyFFmpeg()
 
 MyFFmpeg::~MyFFmpeg()
 {
-
+    avformat_free_context(pFormatCtx);
     avformat_network_deinit();
 }
 
-bool MyFFmpeg::OpenUrl(string filepath)
+bool MyFFmpeg::OpenUrl()
 {
      cout<<__FUNCTION__<<__LINE__<<endl;
     //this->filename = filepath;
     pFormatCtx = avformat_alloc_context();
-    cout<<filepath.c_str()<<endl;
-    if (avformat_open_input(&pFormatCtx, filepath.c_str(), NULL, NULL) != 0) {
+    cout<<filename.c_str()<<endl;
+    if (avformat_open_input(&pFormatCtx, filename.c_str(), NULL, NULL) != 0) {
         printf("can't open the file. \n");
         return false;
     }
@@ -89,7 +89,7 @@ bool MyFFmpeg::OpenUrl(string filepath)
     packet = (AVPacket *) malloc(sizeof(AVPacket)); //分配一个packet
     av_new_packet(packet, y_size); //分配packet的数据
 
-    av_dump_format(pFormatCtx, 0, filepath.c_str(), 0); //输出视频信息
+    av_dump_format(pFormatCtx, 0, filename.c_str(), 0); //输出视频信息
 
     int got_picture;
  cout<<__FUNCTION__<<__LINE__<<endl;
@@ -115,12 +115,12 @@ bool MyFFmpeg::OpenUrl(string filepath)
                         pFrameRGB->linesize);
 
 
-                //SaveFrame(pFrameRGB, pCodecCtx->width,pCodecCtx->height,index++); //保存图片
- cout<<__FUNCTION__<<__LINE__<<endl;
+                //SaveFrame(pFrameRGB, pCodecCtx->width,pCodecCtx->height,index++);   //保存图片
+                cout<<__FUNCTION__<<__LINE__<<endl;
                 QImage tmpImg ((uchar*) out_buffer,pCodecCtx->width,pCodecCtx->height,QImage::Format_RGB32);
                 QImage image = tmpImg.copy();
                 emit sig_GetOneFrame(image);
- cout<<__FUNCTION__<<__LINE__<<endl;
+                cout<<__FUNCTION__<<__LINE__<<endl;
             }
         }
         av_free_packet(packet);
@@ -144,11 +144,27 @@ void MyFFmpeg::setFilename(string filename)
 bool MyFFmpeg::CloseUrl()
 {
     avformat_close_input(&pFormatCtx);
-    avformat_free_context(pFormatCtx);
+
     return true;
+}
+
+void MyFFmpeg::avDumpFormat()
+{
+    av_dump_format(pFormatCtx, 0, filename.c_str(), 0); //输出视频信息
 }
 
 void MyFFmpeg::run()
 {
-    OpenUrl("E:\\testvideo\\Titanic.mkv");
+    setFilename("E:\\testvideo\\Titanic.mkv");
+    OpenUrl();
+}
+
+int MyFFmpeg::avReadFrame(CAVPacket cpacket)
+{
+    return av_read_frame(pFormatCtx,cpacket.getAVPacket());
+}
+
+string MyFFmpeg::getFilename() const
+{
+    return filename;
 }

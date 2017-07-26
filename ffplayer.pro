@@ -28,13 +28,15 @@ SOURCES += \
         mainwindow.cpp \
     myffmpeg.cpp \
     videoplayer.cpp \
-    test.cpp
+    cavframe.cpp \
+    cavpacket.cpp
 
 HEADERS += \
         mainwindow.h \
     myffmpeg.h \
     videoplayer.h \
-    test.h
+    cavframe.h \
+    cavpacket.h
 
 FORMS += \
         mainwindow.ui
@@ -48,5 +50,8 @@ LIBS += $$PWD/ff33/lib/avcodec.lib\
         $$PWD/ff33/lib/postproc.lib\
         $$PWD/ff33/lib/swresample.lib\
         $$PWD/ff33/lib/swscale.lib\
+
+RESOURCES += \
+    icon.qrc
 
 

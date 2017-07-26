@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "test.h"
+//#include "test.h"
 #include "myffmpeg.h"
 
 
@@ -23,7 +23,7 @@ public:
 private:
     QImage mImage;
     Ui::MainWindow *ui;
-    Test *t;
+   // Test *t;
     MyFFmpeg ff;
 public slots:
     void soltGetOneFrame(QImage img);

@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-   // ui->setupUi(this);
+    ui->setupUi(this);
 
 
 
@@ -18,7 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //connect(&ff,SIGNAL(sig_GetOneFrame(QImage img)),this,SLOT(soltGetOneFrame(QImage img)));
 
-    connect(&ff, &MyFFmpeg::sig_GetOneFrame,this,  &MainWindow::soltGetOneFrame);
+   connect(&ff, &MyFFmpeg::sig_GetOneFrame,this,  &MainWindow::soltGetOneFrame);
 
    ff.start();
 
@@ -27,7 +27,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-    //delete ui;
+    ff.terminate();
+    ff.wait();
+    delete ui;
 }
 
 void MainWindow::soltGetOneFrame(QImage img)

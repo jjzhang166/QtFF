@@ -5,7 +5,8 @@
 #include <iostream>
 using namespace std;
 
-
+#include"cavframe.h"
+#include"cavpacket.h"
 
 #include <QObject>
 #include <QImage>
@@ -26,10 +27,14 @@ class MyFFmpeg:public QThread
 public:
     MyFFmpeg();
     ~MyFFmpeg();
-    bool OpenUrl(string filepath);
+    bool OpenUrl();
     void setFilename(string filename);
+    string getFilename() const;
     bool CloseUrl();
+    void avDumpFormat();  //打印出视频的信息
     void run();
+    int avReadFrame(CAVPacket cpacket);
+
 private:
     AVFormatContext *pFormatCtx;
     AVCodecContext * pCodecCtx;
