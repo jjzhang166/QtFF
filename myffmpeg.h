@@ -47,8 +47,14 @@ private:
     int audioStream;
     int dataStream;
     string filename;
+    bool running = true;
+    bool isplay = true;
 signals:
     void sig_GetOneFrame(QImage img);
+public slots:
+
+    void play();
+    void stop();
 };
 
 #endif // MYFFMPEG_H

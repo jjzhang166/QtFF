@@ -15,20 +15,20 @@ MyFFmpeg::~MyFFmpeg()
 
 bool MyFFmpeg::OpenUrl()
 {
-     cout<<__FUNCTION__<<__LINE__<<endl;
+ //    cout<<__FUNCTION__<<__LINE__<<endl;
     //this->filename = filepath;
     pFormatCtx = avformat_alloc_context();
-    cout<<filename.c_str()<<endl;
+    cout<<"the file is:"<<filename.c_str()<<endl;
     if (avformat_open_input(&pFormatCtx, filename.c_str(), NULL, NULL) != 0) {
         printf("can't open the file. \n");
         return false;
     }
-     cout<<__FUNCTION__<<__LINE__<<endl;
+   //  cout<<__FUNCTION__<<__LINE__<<endl;
     if (avformat_find_stream_info(pFormatCtx, NULL) < 0) {
         printf("Could't find stream infomation.\n");
         return false;
     }
-    cout<<__FUNCTION__<<__LINE__<<endl;
+  //  cout<<__FUNCTION__<<__LINE__<<endl;
     videoStream = -1;
     audioStream = -1;
     dataStream = -1;
@@ -92,12 +92,17 @@ bool MyFFmpeg::OpenUrl()
     av_dump_format(pFormatCtx, 0, filename.c_str(), 0); //输出视频信息
 
     int got_picture;
- cout<<__FUNCTION__<<__LINE__<<endl;
-    while (1)
+    //cout<<__FUNCTION__<<__LINE__<<endl;
+    while (running)
     {
         if (av_read_frame(pFormatCtx, packet) < 0)
         {
             break; //这里认为视频读取完了
+        }
+        while(!isplay){
+            msleep(20);
+            if(!running)
+                break;
         }
 
         if (packet->stream_index == videoStream) {
@@ -114,31 +119,31 @@ bool MyFFmpeg::OpenUrl()
                         pFrame->linesize, 0, pCodecCtx->height, pFrameRGB->data,
                         pFrameRGB->linesize);
 
-
+                //cout<<__FUNCTION__<<__LINE__<<endl;
                 //SaveFrame(pFrameRGB, pCodecCtx->width,pCodecCtx->height,index++);   //保存图片
-                cout<<__FUNCTION__<<__LINE__<<endl;
+                //cout<<__FUNCTION__<<__LINE__<<endl;
                 QImage tmpImg ((uchar*) out_buffer,pCodecCtx->width,pCodecCtx->height,QImage::Format_RGB32);
                 QImage image = tmpImg.copy();
                 emit sig_GetOneFrame(image);
-                cout<<__FUNCTION__<<__LINE__<<endl;
+                //cout<<__FUNCTION__<<__LINE__<<endl;
             }
         }
         av_free_packet(packet);
-        msleep(5); //停一停  不然放的太快了
+        msleep(10); //停一停  不然放的太快了
     }
     av_free(out_buffer);
     av_free(pFrameRGB);
     avcodec_close(pCodecCtx);
     avformat_close_input(&pFormatCtx);
 
-
+    cout<<"thread is done"<<endl;
     return true;
 }
 
 void MyFFmpeg::setFilename(string filename)
 {
     this->filename = filename;
-
+    cout <<"set:"<<this->filename <<endl;
 }
 
 bool MyFFmpeg::CloseUrl()
@@ -155,13 +160,36 @@ void MyFFmpeg::avDumpFormat()
 
 void MyFFmpeg::run()
 {
-    setFilename("E:\\testvideo\\Titanic.mkv");
+    //setFilename("E:\\testvideo\\Titanic.mkv");
     OpenUrl();
 }
 
 int MyFFmpeg::avReadFrame(CAVPacket cpacket)
 {
     return av_read_frame(pFormatCtx,cpacket.getAVPacket());
+}
+
+void MyFFmpeg::play()
+{
+    if(running)
+    {
+        if(this->isplay)
+            this->isplay = false;
+        else
+            this->isplay = true;
+
+    }
+    else
+    {
+        isplay = true;
+        running = true;
+        this->start();
+    }
+}
+
+void MyFFmpeg::stop()
+{
+    running = false;
 }
 
 string MyFFmpeg::getFilename() const

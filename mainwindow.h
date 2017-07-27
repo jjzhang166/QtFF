@@ -25,8 +25,11 @@ private:
     Ui::MainWindow *ui;
    // Test *t;
     MyFFmpeg ff;
+
+
 public slots:
     void soltGetOneFrame(QImage img);
+    void openfile();
 };
 
 #endif // MAINWINDOW_H

@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QToolButton" name="toolButton">
+   <widget class="QToolButton" name="btnOpen">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -30,7 +30,7 @@
      <string>...</string>
     </property>
    </widget>
-   <widget class="QToolButton" name="toolButton_2">
+   <widget class="QToolButton" name="btnPlay">
     <property name="geometry">
      <rect>
       <x>350</x>
@@ -46,7 +46,7 @@
      <string>...</string>
     </property>
    </widget>
-   <widget class="QToolButton" name="toolButton_3">
+   <widget class="QToolButton" name="btnStop">
     <property name="geometry">
      <rect>
       <x>410</x>

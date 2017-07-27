@@ -2,8 +2,8 @@
 #include "ui_mainwindow.h"
 #include "videoplayer.h"
 #include <QPainter>
-
-
+#include <QThread>
+#include<QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -11,16 +11,17 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-
-
-
-  // ff.set
-
+    // ff.set
     //connect(&ff,SIGNAL(sig_GetOneFrame(QImage img)),this,SLOT(soltGetOneFrame(QImage img)));
+
+    connect(ui->btnPlay,&QToolButton::clicked, &ff,&MyFFmpeg::play);
+    connect(ui->btnStop,&QToolButton::clicked, &ff,&MyFFmpeg::stop);
+
+    connect(ui->btnOpen,&QToolButton::clicked, this,&MainWindow::openfile);
 
    connect(&ff, &MyFFmpeg::sig_GetOneFrame,this,  &MainWindow::soltGetOneFrame);
 
-   ff.start();
+   //ff.start();
 
 }
 
@@ -38,6 +39,23 @@ void MainWindow::soltGetOneFrame(QImage img)
     //cout<<"a img"<<endl;
         mImage = img;
         update();
+
+}
+
+void MainWindow::openfile()
+{
+    QString filename;
+    filename = QFileDialog::getOpenFileName(this,"open video","","mp4 files(*.mp4);all file(*.*)");
+    if(!filename.isNull())
+    {
+
+        cout << filename.toStdString() << endl;
+        ff.stop();
+
+        ff.setFilename(filename.toStdString());
+       // while(ff.thread()->isFinished());
+        //ff.play();
+    }
 
 }
 
