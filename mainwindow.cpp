@@ -11,17 +11,15 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // ff.set
-    //connect(&ff,SIGNAL(sig_GetOneFrame(QImage img)),this,SLOT(soltGetOneFrame(QImage img)));
+
 
     connect(ui->btnPlay,&QToolButton::clicked, &ff,&MyFFmpeg::play);
     connect(ui->btnStop,&QToolButton::clicked, &ff,&MyFFmpeg::stop);
 
     connect(ui->btnOpen,&QToolButton::clicked, this,&MainWindow::openfile);
 
-   connect(&ff, &MyFFmpeg::sig_GetOneFrame,this,  &MainWindow::soltGetOneFrame);
+    connect(&ff, &MyFFmpeg::sig_GetOneFrame,this,  &MainWindow::soltGetOneFrame);
 
-   //ff.start();
 
 }
 

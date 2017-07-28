@@ -1,5 +1,16 @@
 #include "myffmpeg.h"
 
+
+  list<AVFrame*> audioList ;
+ struct SwrContext  *au_convert_ctx;
+
+ uint8_t * out_buffer;
+  uint8_t * out_buffer_a;
+
+  int out_buffer_size_A;
+
+
+#define MAX_AUDIO_FRAME_SIZE 192000
 MyFFmpeg::MyFFmpeg()
 {
     cout<<__FUNCTION__<<__LINE__<<endl;
@@ -15,6 +26,9 @@ MyFFmpeg::~MyFFmpeg()
 
 bool MyFFmpeg::OpenUrl()
 {
+
+
+
  //    cout<<__FUNCTION__<<__LINE__<<endl;
     //this->filename = filepath;
     pFormatCtx = avformat_alloc_context();
@@ -59,17 +73,31 @@ bool MyFFmpeg::OpenUrl()
     ///查找解码器
     pCodecCtx = pFormatCtx->streams[videoStream]->codec;
     pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
- cout<<__FUNCTION__<<__LINE__<<endl;
+    //cout<<__FUNCTION__<<__LINE__<<endl;
     if (pCodec == NULL) {
         printf("Codec not found.\n");
         return false;
     }
+   cout << pCodec->name << endl;
+   ///打开解码器
+   if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
+       printf("Could not open codec.\n");
+       return false;
+   }
 
-    ///打开解码器
-    if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
-        printf("Could not open codec.\n");
-        return false;
-    }
+   pCodecCtx_A = pFormatCtx->streams[audioStream]->codec;
+   pCodec_A = avcodec_find_decoder(pCodecCtx_A->codec_id);
+   if (pCodec_A == NULL) {
+       printf("pCodec_A not found.\n");
+       return false;
+   }
+   cout << pCodec_A->name << endl;
+   if(avcodec_open2(pCodecCtx_A,pCodec_A,NULL) < 0)
+   {
+       cout << "count not open codec." << endl;
+   }
+
+
 
     pFrame = av_frame_alloc();
     pFrameRGB = av_frame_alloc();
@@ -91,8 +119,18 @@ bool MyFFmpeg::OpenUrl()
 
     av_dump_format(pFormatCtx, 0, filename.c_str(), 0); //输出视频信息
 
+
+    au_convert_ctx = swr_alloc();
+    au_convert_ctx=swr_alloc_set_opts(au_convert_ctx,AV_CH_LAYOUT_STEREO, AV_SAMPLE_FMT_S16, 44100,
+    av_get_default_channel_layout(pCodecCtx_A->channels),pCodecCtx->sample_fmt , pCodecCtx->sample_rate,0, NULL);
+    swr_init(au_convert_ctx);
+
+    out_buffer_a=(uint8_t *)av_malloc(MAX_AUDIO_FRAME_SIZE*2);
+     out_buffer_size_A = av_samples_get_buffer_size(NULL,av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO) ,pCodecCtx_A->frame_size,AV_SAMPLE_FMT_S16, 1);
     int got_picture;
-    //cout<<__FUNCTION__<<__LINE__<<endl;
+
+    initSDL();
+    cout<<__FUNCTION__<<__LINE__<<endl;
     while (running)
     {
         if (av_read_frame(pFormatCtx, packet) < 0)
@@ -126,6 +164,26 @@ bool MyFFmpeg::OpenUrl()
                 QImage image = tmpImg.copy();
                 emit sig_GetOneFrame(image);
                 //cout<<__FUNCTION__<<__LINE__<<endl;
+            }
+        }
+        else if(packet->stream_index == audioStream)
+        {
+            int ret = avcodec_decode_audio4(pCodecCtx_A,pFrame, &got_picture, packet);
+            if(ret < 0)
+            {
+                cout <<"decode error"<< endl;
+            }
+            if(got_picture)
+            {
+
+//                cout << "pFrame ->nb_samples = " << pFrame ->nb_samples << endl;
+//
+
+
+                AVFrame * avFrameTmp = av_frame_alloc();
+                av_frame_copy(avFrameTmp, pFrame);
+                audioList.push_back(avFrameTmp);
+                //cout<< "get audio data" << endl;
             }
         }
         av_free_packet(packet);
@@ -168,6 +226,67 @@ int MyFFmpeg::avReadFrame(CAVPacket cpacket)
 {
     return av_read_frame(pFormatCtx,cpacket.getAVPacket());
 }
+
+void fill_audiodata(void *udata, uint8_t *stream, int len)
+{
+    static int bufflen = 0;
+
+    SDL_memset(stream, 0 , len);
+
+
+
+
+    if(bufflen <= 0)  //没有剩余数据了，就要开始出队列，转化格式了。
+    {
+        if(audioList.size() <= 0)
+            return ;
+
+        cout << "get data to audio len = "<< len << endl;
+        AVFrame * avframe;
+        audioList.push_front(avframe);
+
+        swr_convert(au_convert_ctx,&out_buffer_a, MAX_AUDIO_FRAME_SIZE,(const uint8_t **)avframe->data ,\
+                                   avframe->nb_samples);
+        bufflen = out_buffer_size_A;
+
+
+        //SDL_memcpy(stream,avframe->extended_data[0],len);
+        av_frame_free(&avframe);
+    }
+    len = (len > bufflen ? bufflen : len);
+    SDL_memcpy(stream,out_buffer+(out_buffer_size_A-bufflen),len);
+    bufflen -= len;
+
+
+}
+int MyFFmpeg::initSDL()
+{
+    if(SDL_Init(SDL_INIT_AUDIO|SDL_INIT_TIMER))
+    {
+        cout << "sdl init error!" << endl;
+    }
+
+
+
+   // int out_sample_rate = 44100;
+    wanted_spec.freq = 44100;
+    wanted_spec.format = AUDIO_S16SYS;
+    wanted_spec.channels = av_get_channel_layout_nb_channels(AV_CH_LAYOUT_STEREO);
+    wanted_spec.silence = 0;
+    wanted_spec.samples = pCodecCtx_A->frame_size;
+    wanted_spec.callback = fill_audiodata;
+    wanted_spec.userdata = pCodecCtx_A;
+
+    if(SDL_OpenAudio(&wanted_spec,NULL) < 0)
+    {
+        cout << "can't open audio" << endl;
+        return -1;
+    }
+    SDL_PauseAudio(0);
+    return 0;
+}
+
+
 
 void MyFFmpeg::play()
 {

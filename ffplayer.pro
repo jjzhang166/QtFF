@@ -42,6 +42,7 @@ FORMS += \
         mainwindow.ui
 
 INCLUDEPATH += $$PWD/ff33/include
+
 LIBS += $$PWD/ff33/lib/avcodec.lib\
         $$PWD/ff33/lib/avdevice.lib\
         $$PWD/ff33/lib/avfilter.lib\
@@ -50,6 +51,14 @@ LIBS += $$PWD/ff33/lib/avcodec.lib\
         $$PWD/ff33/lib/postproc.lib\
         $$PWD/ff33/lib/swresample.lib\
         $$PWD/ff33/lib/swscale.lib\
+
+
+
+INCLUDEPATH += $$PWD/SDL2/include
+LIBS += $$PWD/SDL2/lib/x86/SDL2.lib
+        #$$PWD/SDL2/x86/SDLmain.lib
+
+
 
 RESOURCES += \
     icon.qrc
