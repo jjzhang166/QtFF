@@ -29,7 +29,9 @@ private:
 
 public slots:
     void soltGetOneFrame(QImage img);
-    void openfile();
+    void soltOpenfile();
+
+    void soltCtrlState();
 };
 
 #endif // MAINWINDOW_H

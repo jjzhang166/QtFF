@@ -11,17 +11,18 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // ff.set
-    //connect(&ff,SIGNAL(sig_GetOneFrame(QImage img)),this,SLOT(soltGetOneFrame(QImage img)));
 
     connect(ui->btnPlay,&QToolButton::clicked, &ff,&MyFFmpeg::play);
     connect(ui->btnStop,&QToolButton::clicked, &ff,&MyFFmpeg::stop);
+   // connect(ui->btnPlay,&QToolButton::clicked, this, &MainWindow::soltCtrlState);
+  //  connect(ui->btnStop,&QToolButton::clicked, this, &MainWindow::soltCtrlState);
 
-    connect(ui->btnOpen,&QToolButton::clicked, this,&MainWindow::openfile);
 
-   connect(&ff, &MyFFmpeg::sig_GetOneFrame,this,  &MainWindow::soltGetOneFrame);
+    connect(ui->btnOpen,&QToolButton::clicked, this,&MainWindow::soltOpenfile);
 
-   //ff.start();
+
+
+    connect(&ff, &MyFFmpeg::sig_GetOneFrame,this,  &MainWindow::soltGetOneFrame);
 
 }
 
@@ -37,26 +38,40 @@ void MainWindow::soltGetOneFrame(QImage img)
 {
 
     //cout<<"a img"<<endl;
-        mImage = img;
-        update();
+    mImage = img;
+    update(); //让窗体失效
 
 }
 
-void MainWindow::openfile()
+void MainWindow::soltOpenfile()
 {
     QString filename;
     filename = QFileDialog::getOpenFileName(this,"open video","","mp4 files(*.mp4);all file(*.*)");
+    this->setWindowTitle(filename);
     if(!filename.isNull())
     {
 
         cout << filename.toStdString() << endl;
-        ff.stop();
+        ff.stop(); //停止当前的播放
 
         ff.setFilename(filename.toStdString());
-       // while(ff.thread()->isFinished());
-        //ff.play();
-    }
 
+        ff.play();
+    }
+}
+
+void MainWindow::soltCtrlState()
+{
+    if(ui->btnPlay == dynamic_cast<QToolButton*>(sender()))
+    {
+
+    }
+    else if(ui->btnStop == dynamic_cast<QToolButton*>(sender()))
+    {
+        QPainter painter(this);
+        painter.setBrush(Qt::black);
+        painter.drawRect(0,0,this->width(),this->height());
+    }
 }
 
 void MainWindow::paintEvent(QPaintEvent *event)

@@ -47,8 +47,8 @@ private:
     int audioStream;
     int dataStream;
     string filename;
-    bool running = true;
-    bool isplay = true;
+    bool running = false;
+    bool isPause = false;
 signals:
     void sig_GetOneFrame(QImage img);
 public slots:
